@@ -34,6 +34,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+import "github.com/Microsoft/go-winio"
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of yubikey-agent:\n")
@@ -95,7 +97,8 @@ func runAgent(socketPath string) {
 	if err := os.MkdirAll(filepath.Dir(socketPath), 0777); err != nil {
 		log.Fatalln("Failed to create UNIX socket folder:", err)
 	}
-	l, err := net.Listen("unix", socketPath)
+	// l, err := net.Listen("unix", socketPath)
+        l, err := winio.ListenPipe(`\\.\pipe\yubikey-ssh-agent`, nil)
 	if err != nil {
 		log.Fatalln("Failed to listen on UNIX socket:", err)
 	}

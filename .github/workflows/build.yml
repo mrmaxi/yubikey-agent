@@ -24,6 +24,10 @@ jobs:
         with:
           go-version: "1.22"
 
+      - name: Install winio
+        run: |
+          go get github.com/Microsoft/go-winio@latest
+
       - name: Build binary
         run: |
           mkdir -p build/${{ matrix.goos }}-${{ matrix.goarch }}
