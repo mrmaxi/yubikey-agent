@@ -1,0 +1,49 @@
+name: Build & Release yubikey-agent
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'   # запуск по git tag, например v0.1.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [windows]
+        goarch: [amd64, arm64]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build binary
+        run: |
+          mkdir -p dist/${{ matrix.goos }}-${{ matrix.goarch }}
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/${{ matrix.goos }}-${{ matrix.goarch }}/yubikey-agent .
+
+      - name: Archive binary
+        run: |
+          cd dist/${{ matrix.goos }}-${{ matrix.goarch }}
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip -r ../../yubikey-agent-${{ matrix.goos }}-${{ matrix.goarch }}.zip yubikey-agent.exe
+          else
+            tar -czf ../../yubikey-agent-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz yubikey-agent
+          fi
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            yubikey-agent-*.zip
+            yubikey-agent-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
